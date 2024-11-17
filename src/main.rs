@@ -1,4 +1,6 @@
-#[tokio::main]
+use shell_rs::Shell;
+
+#[tokio::main(flavor = "current_thread")]
 async fn main() -> anyhow::Result<()> {
-    Ok(())
+    Shell::new().run().await
 }
