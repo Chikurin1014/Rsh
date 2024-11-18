@@ -1,4 +1,4 @@
-use shell_rs::Shell;
+use rsh::Shell;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {

@@ -241,6 +241,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "rsh"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "nix",
+ "rustyline",
+ "signal-hook",
+ "signal-hook-tokio",
+ "thiserror",
+ "tokio",
+]
+
+[[package]]
 name = "rustc-demangle"
 version = "0.1.24"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -279,19 +292,6 @@ dependencies = [
  "unicode-width",
  "utf8parse",
  "windows-sys 0.59.0",
-]
-
-[[package]]
-name = "shell-rs"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "nix",
- "rustyline",
- "signal-hook",
- "signal-hook-tokio",
- "thiserror",
- "tokio",
 ]
 
 [[package]]
