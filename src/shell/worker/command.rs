@@ -3,7 +3,7 @@ mod runner;
 
 use tokio::process::Command as TokioCommand;
 
-use parser::parse_builtin;
+use parser::parse;
 
 pub use runner::run_command;
 
@@ -14,9 +14,7 @@ pub enum Command {
 
 impl Command {
     pub fn new(command: &str) -> Command {
-        parse_builtin(command)
-            .map(|cmd| Command::Builtin(cmd))
-            .unwrap_or_else(|| Command::External(TokioCommand::new(command)))
+        parse(command)
     }
 }
 

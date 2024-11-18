@@ -1,6 +1,19 @@
-use super::{BuiltinCommand, BuiltinCommandType};
+use super::{BuiltinCommand, BuiltinCommandType, Command, TokioCommand};
 
-pub fn parse_builtin(command: &str) -> Option<BuiltinCommand> {
+pub fn parse(command: &str) -> Command {
+    parse_builtin(command)
+        .map(|cmd| Command::Builtin(cmd))
+        .unwrap_or({
+            let mut parts = command.split_whitespace();
+            let cmd_part = parts.next().unwrap_or_default();
+            let arg_parts = parts.map(|s| s.to_string()).collect::<Vec<_>>();
+            let mut cmd = TokioCommand::new(cmd_part);
+            cmd.args(arg_parts);
+            Command::External(cmd)
+        })
+}
+
+fn parse_builtin(command: &str) -> Option<BuiltinCommand> {
     let mut parts = command.split_whitespace();
     let cmd = parts.next()?;
     let args = parts.map(|s| s.to_string()).collect();
