@@ -11,38 +11,35 @@ const SHELL_NAME: &str = "rsh";
 
 pub struct Shell {
     interactor: Interactor,
-    runner: Worker,
+    worker: Worker,
     signal_handler: SignalHandler,
 }
 
 impl Shell {
     pub fn new() -> Shell {
         let (interactor_tx, interactor_rx) = channel(100);
-        let (runner_tx1, runner_rx) = channel(100);
-        let runner_tx2 = runner_tx1.clone();
+        let (worker_tx1, worker_rx) = channel(100);
+        let worker_tx2 = worker_tx1.clone();
 
-        let interactor = Interactor::new(interactor_rx, runner_tx1, "rsh.log");
-        let runner = Worker::new(runner_rx, interactor_tx);
-        let signal_handler = SignalHandler::new(runner_tx2);
+        let interactor = Interactor::new(interactor_rx, worker_tx1, "rsh.log");
+        let worker = Worker::new(worker_rx, interactor_tx);
+        let signal_handler = SignalHandler::new(worker_tx2);
 
         Shell {
             interactor,
-            runner,
+            worker,
             signal_handler,
         }
     }
 
     pub async fn run(self) -> anyhow::Result<()> {
         let signal_handler_handle = self.signal_handler.spawn()?;
-        let runner_handle = self.runner.spawn();
+        let worker_handle = self.worker.spawn();
         let interactor_handle = self.interactor.spawn();
 
-        let (runner_result, interactor_result) =
-            tokio::try_join!(runner_handle, interactor_handle)?;
-
+        worker_handle.await??;
+        interactor_handle.await??;
         signal_handler_handle.abort();
-        runner_result?;
-        interactor_result?;
 
         Ok(())
     }
