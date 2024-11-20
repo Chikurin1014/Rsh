@@ -1,3 +1,3 @@
 mod shell;
 
-pub use shell::Shell;
+pub use shell::{Shell, ShellHandler};

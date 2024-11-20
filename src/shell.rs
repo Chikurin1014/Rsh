@@ -43,18 +43,33 @@ impl Shell {
         }
     }
 
-    pub fn spawn(self) -> (JoinHandle<anyhow::Result<()>>, Sender<String>) {
+    pub fn spawn(self) -> ShellHandler {
         let (shell_tx, mut rx) = channel(100);
         let worker_tx = self.worker_tx.clone();
 
         let handle = tokio::spawn(async move {
             let h = self.run();
-            while let Some(line) = rx.recv().await {
-                worker_tx.send(WorkerMsg::Command { command: line }).await?;
+            while let Some(cmd) = rx.recv().await {
+                match cmd {
+                    ShellMsg::Command(command) => {
+                        worker_tx.send(WorkerMsg::Command { command }).await?;
+                    }
+                    ShellMsg::Close => {
+                        worker_tx
+                            .send(WorkerMsg::Command {
+                                command: "exit".to_string(),
+                            })
+                            .await?;
+                        break;
+                    }
+                }
             }
             h.await
         });
-        (handle, shell_tx)
+        ShellHandler {
+            shell_handle: handle,
+            shell_tx,
+        }
     }
 
     pub async fn run(self) -> anyhow::Result<()> {
@@ -65,7 +80,29 @@ impl Shell {
         worker_handle.await??;
         interactor_handle.await??;
         signal_handler_handle.abort();
-
         Ok(())
+    }
+}
+
+pub enum ShellMsg {
+    Command(String),
+    Close,
+}
+
+pub struct ShellHandler {
+    shell_handle: JoinHandle<anyhow::Result<()>>,
+    shell_tx: Sender<ShellMsg>,
+}
+
+impl ShellHandler {
+    pub async fn command(self, command: &str) -> anyhow::Result<Self> {
+        self.shell_tx
+            .send(ShellMsg::Command(command.to_string()))
+            .await?;
+        Ok(self)
+    }
+    pub async fn close(self) -> anyhow::Result<()> {
+        self.shell_tx.send(ShellMsg::Close).await?;
+        self.shell_handle.await?
     }
 }
