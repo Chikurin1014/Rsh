@@ -27,25 +27,30 @@ impl Worker {
             let mut exit_code = 0;
             let mut status = CommandStatus::Success;
             while let Some(msg) = self.rx.recv().await {
-                println!("Worker received: {:?}", msg);
+                println!("rsh worker received: {:?}", msg);
                 let continue_loop = match msg {
                     WorkerMsg::Command(command) => {
-                        exit_code = run_command(Command::new(&command)).await?;
+                        exit_code = run_command(Command::new(&command))
+                            .await
+                            .unwrap_or_else(|e| {
+                                eprintln!("rsh error: {}", e);
+                                1
+                            });
                         status = exit_code.into();
                         true
                     }
                     WorkerMsg::Signal(signal::SIGINT) => {
-                        eprintln!("SIGINT");
+                        eprintln!("rsh recived signal: SIGINT");
                         exit_code = 130;
                         false
                     }
                     WorkerMsg::Signal(signal::SIGTSTP) => {
-                        eprintln!("SIGTSTP");
+                        eprintln!("rsh recived signal: SIGTSTP");
                         exit_code = 148;
                         false
                     }
                     WorkerMsg::Signal(signal::SIGCHLD) => {
-                        eprintln!("SIGCHLD");
+                        eprintln!("rsh recived signal: SIGCHLD");
                         exit_code = 0;
                         true
                     }
