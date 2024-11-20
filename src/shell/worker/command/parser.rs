@@ -5,7 +5,14 @@ pub fn parse(command: &str) -> Command {
         .map(|cmd| Command::Builtin(cmd))
         .unwrap_or({
             let mut parts = command.split_whitespace();
-            let cmd_part = parts.next().unwrap_or_default();
+            let cmd_part = {
+                let a = parts.next().unwrap_or_default();
+                if a.starts_with('^') {
+                    &a[1..]
+                } else {
+                    a
+                }
+            };
             let arg_parts = parts.map(|s| s.to_string()).collect::<Vec<_>>();
             let mut cmd = TokioCommand::new(cmd_part);
             cmd.args(arg_parts);
