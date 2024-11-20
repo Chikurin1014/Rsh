@@ -52,12 +52,10 @@ impl Interactor {
                         rl.add_history_entry(trimmed)?;
 
                         self.worker_tx
-                            .send(WorkerMsg::Command {
-                                command: trimmed.to_string(),
-                            })
+                            .send(WorkerMsg::Command(trimmed.to_string()))
                             .await?;
                         match self.rx.recv().await {
-                            Some(InteractorMsg::Continue { status }) => {
+                            Some(InteractorMsg::Continue(status)) => {
                                 previous_status = status;
                                 continue;
                             }
@@ -73,9 +71,7 @@ impl Interactor {
                     Err(rustyline::error::ReadlineError::Eof) => {
                         eprintln!("EOF");
                         self.worker_tx
-                            .send(WorkerMsg::Command {
-                                command: "exit".to_string(),
-                            })
+                            .send(WorkerMsg::Command("exit".to_string()))
                             .await?;
                         if let Some(InteractorMsg::Quit) = self.rx.recv().await {
                             break;

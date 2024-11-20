@@ -29,28 +29,22 @@ impl Worker {
             while let Some(msg) = self.rx.recv().await {
                 println!("Worker received: {:?}", msg);
                 let continue_loop = match msg {
-                    WorkerMsg::Command { command } => {
+                    WorkerMsg::Command(command) => {
                         exit_code = run_command(Command::new(&command)).await?;
                         status = exit_code.into();
                         true
                     }
-                    WorkerMsg::Signal {
-                        signal: signal::SIGINT,
-                    } => {
+                    WorkerMsg::Signal(signal::SIGINT) => {
                         eprintln!("SIGINT");
                         exit_code = 130;
                         false
                     }
-                    WorkerMsg::Signal {
-                        signal: signal::SIGTSTP,
-                    } => {
+                    WorkerMsg::Signal(signal::SIGTSTP) => {
                         eprintln!("SIGTSTP");
                         exit_code = 148;
                         false
                     }
-                    WorkerMsg::Signal {
-                        signal: signal::SIGCHLD,
-                    } => {
+                    WorkerMsg::Signal(signal::SIGCHLD) => {
                         eprintln!("SIGCHLD");
                         exit_code = 0;
                         true
@@ -59,7 +53,7 @@ impl Worker {
                 }; // match msg
                 if continue_loop {
                     self.interactor_tx
-                        .send(InteractorMsg::Continue { status })
+                        .send(InteractorMsg::Continue(status))
                         .await?;
                 } else {
                     self.interactor_tx.send(InteractorMsg::Quit).await?;

@@ -1,12 +1,12 @@
 #[derive(Debug)]
 pub enum WorkerMsg {
-    Signal { signal: i32 },
-    Command { command: String },
+    Signal(i32),
+    Command(String),
 }
 
 #[derive(Debug)]
 pub enum InteractorMsg {
-    Continue { status: CommandStatus },
+    Continue(CommandStatus),
     Quit,
 }
 

@@ -20,7 +20,7 @@ impl SignalHandler {
         let mut signals = Signals::new(&[signal::SIGINT, signal::SIGTSTP, signal::SIGCHLD])?;
         let handle = tokio::spawn(async move {
             for signal in signals.forever() {
-                self.worker_tx.send(WorkerMsg::Signal { signal }).await?;
+                self.worker_tx.send(WorkerMsg::Signal(signal)).await?;
             }
             Ok(())
         });

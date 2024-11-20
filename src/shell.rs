@@ -49,16 +49,14 @@ impl Shell {
 
         let handle = tokio::spawn(async move {
             let h = self.run();
-            while let Some(cmd) = rx.recv().await {
-                match cmd {
-                    ShellMsg::Command(command) => {
-                        worker_tx.send(WorkerMsg::Command { command }).await?;
+            while let Some(command) = rx.recv().await {
+                match command {
+                    ShellMsg::Command(cmd) => {
+                        worker_tx.send(WorkerMsg::Command(cmd)).await?;
                     }
                     ShellMsg::Close => {
                         worker_tx
-                            .send(WorkerMsg::Command {
-                                command: "exit".to_string(),
-                            })
+                            .send(WorkerMsg::Command("exit".to_string()))
                             .await?;
                         break;
                     }
